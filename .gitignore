@@ -18,3 +18,5 @@ app/uploads/*.pdf
 # Windows junk
 Thumbs.db
 desktop.ini
+
+demo_1_compressed.mp4
