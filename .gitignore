@@ -1,0 +1,20 @@
+# Virtual environment — never upload this (huge, machine-specific)
+venv/
+
+# Your API key — never upload this
+.env
+
+# Python cache files
+__pycache__/
+*.pyc
+*.pyo
+
+# Uploaded PDFs (user data, no need to version control)
+app/uploads/*.pdf
+
+# VS Code settings
+.vscode/
+
+# Windows junk
+Thumbs.db
+desktop.ini

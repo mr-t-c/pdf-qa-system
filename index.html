@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ACUVUE Lens FAQ System</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,400&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <header class="header">
+    <div class="header-inner">
+      <div class="logo">
+        <span class="logo-text">ACUVUE LENS FAQ</span>
+      </div>
+    </div>
+  </header>
+
+  <main class="main">
+
+    <aside class="sidebar">
+
+      <section class="card" id="upload-section">
+        <div class="card-header">
+          <span class="card-icon">↑</span>
+          <h2 class="card-title">Upload PDF</h2>
+        </div>
+
+        <div class="drop-zone" id="drop-zone">
+          <input type="file" id="file-input" accept=".pdf" hidden />
+          <div class="drop-inner" id="drop-inner">
+            <div class="drop-icon">PDF</div>
+            <p class="drop-text">Drop a file here or <button class="link-btn" id="browse-btn">browse</button></p>
+            <p class="drop-hint">Only .pdf files · Max 50 MB</p>
+          </div>
+
+          <div class="file-selected" id="file-selected" hidden>
+            <span class="file-icon">▣</span>
+            <span class="file-name" id="file-name"></span>
+            <button class="icon-btn" id="clear-file-btn" title="Remove">✕</button>
+          </div>
+        </div>
+
+        <button class="btn btn-primary" id="upload-btn" disabled>
+          <span class="btn-text">Upload</span>
+          <span class="spinner" hidden></span>
+        </button>
+
+        <p class="status-msg" id="upload-msg" hidden></p>
+      </section>
+
+      <section class="card" id="docs-section">
+        <div class="card-header">
+          <span class="card-icon">≡</span>
+          <h2 class="card-title">Documents</h2>
+          <button class="icon-btn refresh-btn" id="refresh-btn" title="Refresh list">↺</button>
+        </div>
+
+        <div class="select-wrap">
+          <select id="doc-select">
+            <option value="">— Search all documents —</option>
+          </select>
+        </div>
+
+        <ul class="doc-list" id="doc-list"></ul>
+      </section>
+
+    </aside>
+
+    <section class="content">
+
+      <section class="card" id="question-section">
+        <div class="card-header">
+          <span class="card-icon">?</span>
+          <h2 class="card-title">Ask a Question</h2>
+        </div>
+
+        <div class="question-wrap">
+          <textarea
+            id="question-input"
+            class="question-input"
+            placeholder="e.g. What care regimen should be used with ACUVUE lenses?"
+            rows="3"
+          ></textarea>
+        </div>
+
+        <div class="question-actions">
+          <span class="scope-label" id="scope-label">Searching all documents</span>
+          <button class="btn btn-primary" id="ask-btn" disabled>
+            <span class="btn-text">Ask</span>
+            <span class="spinner" hidden></span>
+          </button>
+        </div>
+      </section>
+
+      <section class="card answer-card" id="answer-section" hidden>
+
+        <div class="answer-header">
+          <div class="card-header" style="margin-bottom:0">
+            <span class="card-icon">✦</span>
+            <h2 class="card-title">Answer</h2>
+          </div>
+          <div class="confidence-wrap" id="confidence-wrap">
+            <span class="confidence-label">Confidence</span>
+            <div class="confidence-bar-bg">
+              <div class="confidence-bar-fill" id="confidence-bar"></div>
+            </div>
+            <span class="confidence-pct" id="confidence-pct">0%</span>
+          </div>
+        </div>
+
+        <div class="answer-body" id="answer-body"></div>
+
+        <div class="sources-wrap" id="sources-wrap" hidden>
+          <span class="sources-label">Sources</span>
+          <div class="sources-tags" id="sources-tags"></div>
+        </div>
+
+      </section>
+
+      <div class="error-banner" id="error-banner" hidden>
+        <span class="error-icon">⚠</span>
+        <span id="error-msg"></span>
+        <button class="icon-btn" id="dismiss-error">✕</button>
+      </div>
+
+    </section>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>
