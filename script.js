@@ -427,14 +427,31 @@ function hideError() {
 
 const topicsSection = document.getElementById('topics-section');
 const topicsChips   = document.getElementById('topics-chips');
+const topicsToggle  = document.getElementById('topics-toggle');
+const topicsChevron = document.getElementById('topics-chevron');
+
+// Track whether the topics panel is expanded
+let topicsExpanded = false;
+
+/**
+ * Toggle the topics chip list open/closed when the header is clicked.
+ */
+topicsToggle.addEventListener('click', () => {
+  topicsExpanded = !topicsExpanded;
+  topicsChips.hidden = !topicsExpanded;
+  topicsToggle.classList.toggle('open', topicsExpanded);
+});
 
 /**
  * Fetch topics for the selected document and render as clickable chips.
- * Called whenever the document selector changes to a specific document.
+ * Panel starts collapsed — user clicks header to expand.
  */
 async function fetchTopics(docId) {
-  // Show section in loading state
+  // Show section but keep chips collapsed until user clicks
   topicsSection.hidden = false;
+  topicsExpanded = false;
+  topicsChips.hidden = true;
+  topicsToggle.classList.remove('open');
   topicsChips.innerHTML = '<span class="topics-loading">Extracting topics...</span>';
 
   try {
@@ -446,7 +463,7 @@ async function fetchTopics(docId) {
     renderTopics(data.topics);
 
   } catch (err) {
-    topicsChips.innerHTML = `<span class="topics-loading">Could not load topics.</span>`;
+    topicsChips.innerHTML = '<span class="topics-loading">Could not load topics.</span>';
   }
 }
 
@@ -472,11 +489,11 @@ function renderTopics(topics) {
       const question = topic.endsWith('?') ? topic : `${topic}?`;
       questionInput.value = question;
 
-      // Enable the Ask button and focus the input
+      // Enable the Ask button and focus the textarea
       askBtn.disabled = false;
       questionInput.focus();
 
-      // Scroll the question section into view on mobile
+      // Scroll question into view on mobile
       questionInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
     });
 
@@ -485,25 +502,25 @@ function renderTopics(topics) {
 }
 
 /**
- * Hide and clear the topics section (shown when "all documents" is selected).
+ * Hide and clear the topics section (used when "all documents" is selected).
  */
 function clearTopics() {
-  topicsSection.hidden  = true;
+  topicsSection.hidden = true;
   topicsChips.innerHTML = '';
+  topicsExpanded = false;
+  topicsToggle.classList.remove('open');
 }
 
 // ── Hook into document selector change ───────────────────────
 
-// Override the existing updateScopeLabel to also handle topics
+// Extend updateScopeLabel to also handle topics fetch/clear
 const _originalUpdateScopeLabel = updateScopeLabel;
 updateScopeLabel = function () {
   _originalUpdateScopeLabel();
 
   if (docSelect.value) {
-    // A specific document is selected — fetch its topics
     fetchTopics(docSelect.value);
   } else {
-    // "All documents" — hide topics section
     clearTopics();
   }
 };

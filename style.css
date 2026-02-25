@@ -658,3 +658,31 @@ select:focus {
   font-style: italic;
   padding: 4px 0;
 }
+
+/* ── Topics toggle ─────────────────────────────────────────── */
+.topics-toggle {
+  cursor: pointer;
+  user-select: none;
+  margin-bottom: 0;        /* no gap when collapsed */
+  transition: margin 0.2s;
+}
+
+.topics-toggle:hover .card-title {
+  color: var(--accent);
+}
+
+.topics-toggle.open {
+  margin-bottom: 12px;     /* restore gap when expanded */
+}
+
+.topics-chevron {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin-left: auto;
+  transition: transform 0.2s;
+  flex-shrink: 0;
+}
+
+.topics-toggle.open .topics-chevron {
+  transform: rotate(180deg);
+}

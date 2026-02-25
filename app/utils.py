@@ -292,16 +292,19 @@ _QUESTION_START = re.compile(
 )
 
 
-def extract_headings(filepath: str | Path, max_headings: int = 30) -> list[str]:
+def extract_headings(filepath: str | Path, max_headings: int = 12) -> list[str]:
     """
     Extract meaningful topic headings from a PDF for navigation display.
 
-    Strategy (works for both QA-format and regular PDFs)
+    Rules (stricter than before to avoid over-extraction)
     -----------------------------------------------------
-    1. Question lines   — lines starting with What/How/Can/Should etc.
-    2. ALL CAPS lines   — typically section headers
-    3. Short bold-like  — short lines (< 80 chars) not ending in sentence
-                          punctuation, likely titles or sub-headers
+    1. Question lines that are SHORT (< 80 chars) and end with "?"
+       — covers the QA-format PDFs where every topic is phrased as a question
+    2. ALL CAPS lines with 3-6 words — section titles in formal documents
+       (capped at 6 words to skip long ALL-CAPS sentences)
+
+    Rule 3 (short non-punctuated lines) was removed because it matched
+    too many mid-sentence fragments in this PDF format.
 
     Deduplicates and caps at *max_headings* results.
 
@@ -326,33 +329,34 @@ def extract_headings(filepath: str | Path, max_headings: int = 30) -> list[str]:
                 for raw_line in text.splitlines():
                     line = raw_line.strip()
 
-                    # Skip empty, very short, or pure-number lines
-                    if len(line) < 8 or line.isdigit():
+                    # Skip empty or very short lines
+                    if len(line) < 10:
                         continue
 
-                    # Skip lines that are just a page citation e.g. "Page 27"
-                    if _CITED_PAGE_RE.fullmatch(line.strip()):
+                    # Skip pure page citations e.g. "Page 27"
+                    if _CITED_PAGE_RE.fullmatch(line):
                         continue
 
                     is_heading = False
 
-                    # Rule 1: question-style heading
-                    if _QUESTION_START.match(line) and len(line) < 120:
+                    # Rule 1: question that ends with "?" and is short enough
+                    # to be a heading, not a paragraph mid-sentence question
+                    if (
+                        _QUESTION_START.match(line)
+                        and line.endswith("?")
+                        and len(line) < 80
+                    ):
                         is_heading = True
 
-                    # Rule 2: ALL CAPS line (min 3 words to avoid random caps)
-                    elif (line.isupper() and len(line.split()) >= 3
-                          and len(line) < 80):
-                        is_heading = True
-
-                    # Rule 3: short line not ending with sentence punctuation
-                    elif (len(line) < 80
-                          and not line.endswith((".", ",", ";", ":", "?", "!"))
-                          and len(line.split()) >= 3):
+                    # Rule 2: ALL CAPS line, 3–6 words (avoids long cap sentences)
+                    elif (
+                        line.isupper()
+                        and 3 <= len(line.split()) <= 6
+                        and len(line) < 60
+                    ):
                         is_heading = True
 
                     if is_heading:
-                        # Normalise whitespace and capitalise first letter
                         cleaned = " ".join(line.split())
                         key     = cleaned.lower()
                         if key not in seen:
@@ -361,9 +365,6 @@ def extract_headings(filepath: str | Path, max_headings: int = 30) -> list[str]:
 
                     if len(headings) >= max_headings:
                         break
-
-            if len(headings) >= max_headings:
-                pass   # already capped
 
     except Exception as exc:
         raise RuntimeError(f"Heading extraction failed on '{path}': {exc}") from exc
