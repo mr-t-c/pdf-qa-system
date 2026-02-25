@@ -421,3 +421,89 @@ function hideError() {
   errorBanner.hidden = true;
   errorMsg.textContent = '';
 }
+
+
+/* ── Topics ─────────────────────────────────────────────────── */
+
+const topicsSection = document.getElementById('topics-section');
+const topicsChips   = document.getElementById('topics-chips');
+
+/**
+ * Fetch topics for the selected document and render as clickable chips.
+ * Called whenever the document selector changes to a specific document.
+ */
+async function fetchTopics(docId) {
+  // Show section in loading state
+  topicsSection.hidden = false;
+  topicsChips.innerHTML = '<span class="topics-loading">Extracting topics...</span>';
+
+  try {
+    const res  = await fetch(`${API}/topics/${docId}`);
+    const data = await res.json();
+
+    if (!res.ok) throw new Error(data.detail || 'Failed to fetch topics.');
+
+    renderTopics(data.topics);
+
+  } catch (err) {
+    topicsChips.innerHTML = `<span class="topics-loading">Could not load topics.</span>`;
+  }
+}
+
+/**
+ * Render topic strings as clickable chip buttons.
+ * Clicking a chip pre-fills the question input and focuses it.
+ */
+function renderTopics(topics) {
+  topicsChips.innerHTML = '';
+
+  if (!topics || topics.length === 0) {
+    topicsChips.innerHTML = '<span class="topics-loading">No topics found in this document.</span>';
+    return;
+  }
+
+  topics.forEach(topic => {
+    const chip = document.createElement('button');
+    chip.className   = 'topic-chip';
+    chip.textContent = topic;
+
+    chip.addEventListener('click', () => {
+      // Pre-fill the question input with the topic as a question
+      const question = topic.endsWith('?') ? topic : `${topic}?`;
+      questionInput.value = question;
+
+      // Enable the Ask button and focus the input
+      askBtn.disabled = false;
+      questionInput.focus();
+
+      // Scroll the question section into view on mobile
+      questionInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    });
+
+    topicsChips.appendChild(chip);
+  });
+}
+
+/**
+ * Hide and clear the topics section (shown when "all documents" is selected).
+ */
+function clearTopics() {
+  topicsSection.hidden  = true;
+  topicsChips.innerHTML = '';
+}
+
+// ── Hook into document selector change ───────────────────────
+
+// Override the existing updateScopeLabel to also handle topics
+const _originalUpdateScopeLabel = updateScopeLabel;
+updateScopeLabel = function () {
+  _originalUpdateScopeLabel();
+
+  if (docSelect.value) {
+    // A specific document is selected — fetch its topics
+    fetchTopics(docSelect.value);
+  } else {
+    // "All documents" — hide topics section
+    clearTopics();
+  }
+};

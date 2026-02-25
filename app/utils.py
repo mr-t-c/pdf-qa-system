@@ -277,3 +277,96 @@ def extract_and_chunk_with_pages(
     """Full pipeline: PDF -> (chunk_text, cited_page_number) tuples."""
     pages = extract_pages_from_pdf(filepath)
     return chunk_text_with_pages(pages, chunk_size=chunk_size, chunk_overlap=chunk_overlap)
+
+# ---------------------------------------------------------------------------
+# Heading / Topic extraction
+# ---------------------------------------------------------------------------
+
+# Patterns that strongly suggest a line is a heading in this QA-format PDF:
+# 1. Lines that are a question (start with What/How/Can/Should/Why/Is/Do/Are)
+# 2. Lines in ALL CAPS (section titles)
+# 3. Short lines (< 80 chars) that don't end with common sentence punctuation
+_QUESTION_START = re.compile(
+    r"^(what|how|can|should|why|is|do|are|when|where|which|who)\s",
+    re.IGNORECASE,
+)
+
+
+def extract_headings(filepath: str | Path, max_headings: int = 30) -> list[str]:
+    """
+    Extract meaningful topic headings from a PDF for navigation display.
+
+    Strategy (works for both QA-format and regular PDFs)
+    -----------------------------------------------------
+    1. Question lines   — lines starting with What/How/Can/Should etc.
+    2. ALL CAPS lines   — typically section headers
+    3. Short bold-like  — short lines (< 80 chars) not ending in sentence
+                          punctuation, likely titles or sub-headers
+
+    Deduplicates and caps at *max_headings* results.
+
+    Returns
+    -------
+    list[str] — cleaned heading strings, ready for display.
+    """
+    path = Path(filepath)
+    if not path.exists():
+        raise FileNotFoundError(f"PDF not found: {path}")
+
+    headings: list[str] = []
+    seen:     set[str]  = set()
+
+    try:
+        with pdfplumber.open(path) as pdf:
+            for page in pdf.pages:
+                text = page.extract_text()
+                if not text:
+                    continue
+
+                for raw_line in text.splitlines():
+                    line = raw_line.strip()
+
+                    # Skip empty, very short, or pure-number lines
+                    if len(line) < 8 or line.isdigit():
+                        continue
+
+                    # Skip lines that are just a page citation e.g. "Page 27"
+                    if _CITED_PAGE_RE.fullmatch(line.strip()):
+                        continue
+
+                    is_heading = False
+
+                    # Rule 1: question-style heading
+                    if _QUESTION_START.match(line) and len(line) < 120:
+                        is_heading = True
+
+                    # Rule 2: ALL CAPS line (min 3 words to avoid random caps)
+                    elif (line.isupper() and len(line.split()) >= 3
+                          and len(line) < 80):
+                        is_heading = True
+
+                    # Rule 3: short line not ending with sentence punctuation
+                    elif (len(line) < 80
+                          and not line.endswith((".", ",", ";", ":", "?", "!"))
+                          and len(line.split()) >= 3):
+                        is_heading = True
+
+                    if is_heading:
+                        # Normalise whitespace and capitalise first letter
+                        cleaned = " ".join(line.split())
+                        key     = cleaned.lower()
+                        if key not in seen:
+                            seen.add(key)
+                            headings.append(cleaned)
+
+                    if len(headings) >= max_headings:
+                        break
+
+            if len(headings) >= max_headings:
+                pass   # already capped
+
+    except Exception as exc:
+        raise RuntimeError(f"Heading extraction failed on '{path}': {exc}") from exc
+
+    logger.info("Extracted %d heading(s) from %s", len(headings), path.name)
+    return headings[:max_headings]

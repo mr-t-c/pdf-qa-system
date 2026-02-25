@@ -611,3 +611,50 @@ select:focus {
   .question-actions .btn { width: 100%; }
   .answer-header { flex-direction: column; align-items: flex-start; }
 }
+
+/* ── Topics Section ────────────────────────────────────────── */
+.topics-hint {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  font-style: italic;
+  margin-left: auto;
+}
+
+.topics-chips {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.topic-chip {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.8rem;
+  padding: 8px 12px;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s, color 0.15s;
+  line-height: 1.4;
+}
+
+.topic-chip:hover {
+  border-color: var(--accent);
+  background: var(--accent-dim);
+  color: var(--accent-hover);
+}
+
+.topic-chip:active {
+  background: rgba(61, 142, 240, 0.2);
+}
+
+.topics-loading {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  font-style: italic;
+  padding: 4px 0;
+}

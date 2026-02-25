@@ -11,24 +11,30 @@
 </head>
 <body>
 
+  <!-- ── Header ─────────────────────────────────────────────────────────── -->
   <header class="header">
     <div class="header-inner">
       <div class="logo">
-        <span class="logo-text">ACUVUE LENS FAQ</span>
+        <span class="logo-icon">⬡</span>
+        <span class="logo-text">ACUVUE Lens FAQ</span>
       </div>
     </div>
   </header>
 
+  <!-- ── Main ───────────────────────────────────────────────────────────── -->
   <main class="main">
 
+    <!-- Left column -->
     <aside class="sidebar">
 
+      <!-- Upload section -->
       <section class="card" id="upload-section">
         <div class="card-header">
           <span class="card-icon">↑</span>
           <h2 class="card-title">Upload PDF</h2>
         </div>
 
+        <!-- Drop zone -->
         <div class="drop-zone" id="drop-zone">
           <input type="file" id="file-input" accept=".pdf" hidden />
           <div class="drop-inner" id="drop-inner">
@@ -36,7 +42,7 @@
             <p class="drop-text">Drop a file here or <button class="link-btn" id="browse-btn">browse</button></p>
             <p class="drop-hint">Only .pdf files · Max 50 MB</p>
           </div>
-
+          <!-- Selected file display (hidden by default) -->
           <div class="file-selected" id="file-selected" hidden>
             <span class="file-icon">▣</span>
             <span class="file-name" id="file-name"></span>
@@ -49,9 +55,11 @@
           <span class="spinner" hidden></span>
         </button>
 
+        <!-- Upload status message -->
         <p class="status-msg" id="upload-msg" hidden></p>
       </section>
 
+      <!-- Document selector section -->
       <section class="card" id="docs-section">
         <div class="card-header">
           <span class="card-icon">≡</span>
@@ -65,13 +73,27 @@
           </select>
         </div>
 
+        <!-- Document list (shown when documents exist) -->
         <ul class="doc-list" id="doc-list"></ul>
+      </section>
+
+
+      <!-- Topics section -->
+      <section class="card" id="topics-section" hidden>
+        <div class="card-header">
+          <span class="card-icon">◈</span>
+          <h2 class="card-title">Topics</h2>
+          <span class="topics-hint">click to ask</span>
+        </div>
+        <div class="topics-chips" id="topics-chips"></div>
       </section>
 
     </aside>
 
+    <!-- Right column -->
     <section class="content">
 
+      <!-- Question section -->
       <section class="card" id="question-section">
         <div class="card-header">
           <span class="card-icon">?</span>
@@ -96,8 +118,10 @@
         </div>
       </section>
 
+      <!-- Answer section (hidden until first answer) -->
       <section class="card answer-card" id="answer-section" hidden>
 
+        <!-- Answer header with confidence -->
         <div class="answer-header">
           <div class="card-header" style="margin-bottom:0">
             <span class="card-icon">✦</span>
@@ -112,8 +136,10 @@
           </div>
         </div>
 
+        <!-- Answer text -->
         <div class="answer-body" id="answer-body"></div>
 
+        <!-- Sources -->
         <div class="sources-wrap" id="sources-wrap" hidden>
           <span class="sources-label">Sources</span>
           <div class="sources-tags" id="sources-tags"></div>
@@ -121,6 +147,7 @@
 
       </section>
 
+      <!-- Error section -->
       <div class="error-banner" id="error-banner" hidden>
         <span class="error-icon">⚠</span>
         <span id="error-msg"></span>

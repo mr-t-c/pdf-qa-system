@@ -12,7 +12,7 @@ from pydantic import BaseModel
 
 from .engine import QAEngine
 from .llm import answer_with_groq, get_expanded_query
-from .utils import extract_and_chunk_with_pages
+from .utils import extract_and_chunk_with_pages, extract_headings
 
 # ---------------------------------------------------------------------------
 # Constants
@@ -170,6 +170,35 @@ def delete_document(doc_id: str):
         path.unlink(missing_ok=True)
 
     return {"message": f"Document {doc_id} deleted successfully."}
+
+
+
+# ---------------------------------------------------------------------------
+# Routes -- Topics
+# ---------------------------------------------------------------------------
+
+@app.get("/topics/{doc_id}", tags=["Documents"])
+def get_topics(doc_id: str):
+    """
+    Extract and return topic headings from an uploaded PDF.
+    These are used as clickable navigation chips in the frontend.
+    """
+    # Verify doc exists in the index
+    known_ids = {d["doc_id"] for d in engine.list_documents()}
+    if doc_id not in known_ids:
+        raise HTTPException(status_code=404, detail=f"doc_id '{doc_id}' not found.")
+
+    # Find the PDF file on disk (saved as {doc_id}_{filename}.pdf)
+    matches = list(UPLOAD_DIR.glob(f"{doc_id}_*"))
+    if not matches:
+        raise HTTPException(status_code=404, detail="PDF file not found on disk.")
+
+    try:
+        headings = extract_headings(str(matches[0]))
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=f"Topic extraction failed: {exc}")
+
+    return {"doc_id": doc_id, "topics": headings}
 
 
 # ---------------------------------------------------------------------------
