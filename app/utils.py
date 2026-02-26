@@ -38,9 +38,6 @@ MIN_CHUNK_LENGTH      = 50
 _CITED_PAGE_RE = re.compile(r"\bpage\s+(\d+)", re.IGNORECASE)
 
 
-# ---------------------------------------------------------------------------
-# Inline page citation extractor
-# ---------------------------------------------------------------------------
 
 def extract_cited_page(text: str, fallback: int = 1) -> int:
     """
@@ -62,10 +59,6 @@ def extract_cited_page(text: str, fallback: int = 1) -> int:
         return int(matches[-1])   # last citation in the chunk
     return fallback
 
-
-# ---------------------------------------------------------------------------
-# PDF extraction
-# ---------------------------------------------------------------------------
 
 def extract_pages_from_pdf(filepath: str | Path) -> list[tuple[int, str]]:
     """
@@ -100,9 +93,6 @@ def extract_text_from_pdf(filepath: str | Path) -> str:
     return "\f".join(text for _, text in pages)
 
 
-# ---------------------------------------------------------------------------
-# Text cleaning
-# ---------------------------------------------------------------------------
 
 def clean_text(text: str) -> str:
     """Normalise whitespace without destroying sentence/paragraph structure."""
@@ -117,9 +107,6 @@ def _split_sentences(text: str) -> list[str]:
     return [s.strip() for s in splitter.split(text) if s.strip()]
 
 
-# ---------------------------------------------------------------------------
-# Chunking
-# ---------------------------------------------------------------------------
 
 def chunk_text(
     text: str,
@@ -255,10 +242,6 @@ def chunk_text_with_pages(
     return unique
 
 
-# ---------------------------------------------------------------------------
-# Convenience helpers
-# ---------------------------------------------------------------------------
-
 def extract_and_chunk(
     filepath:      str | Path,
     chunk_size:    int = DEFAULT_CHUNK_SIZE,
@@ -278,9 +261,6 @@ def extract_and_chunk_with_pages(
     pages = extract_pages_from_pdf(filepath)
     return chunk_text_with_pages(pages, chunk_size=chunk_size, chunk_overlap=chunk_overlap)
 
-# ---------------------------------------------------------------------------
-# Heading / Topic extraction
-# ---------------------------------------------------------------------------
 
 # Patterns that strongly suggest a line is a heading in this QA-format PDF:
 # 1. Lines that are a question (start with What/How/Can/Should/Why/Is/Do/Are)

@@ -34,9 +34,6 @@ load_dotenv()
 
 logger = logging.getLogger(__name__)
 
-# ---------------------------------------------------------------------------
-# Config
-# ---------------------------------------------------------------------------
 
 GROQ_MODEL = "llama-3.3-70b-versatile"
 
@@ -45,7 +42,6 @@ LOW_CONFIDENCE_THRESHOLD = 0.3
 SHORT_QUERY_WORD_LIMIT = 5
 
 # Trim each retrieved chunk to this many characters before sending to Groq.
-# Keeps token usage low and well within free-tier limits.
 MAX_CHARS_PER_CHUNK = 800
 
 # Retry settings for 429 rate-limit errors
@@ -70,9 +66,6 @@ SYSTEM_PROMPT = (
 )
 
 
-# ---------------------------------------------------------------------------
-# Initialisation
-# ---------------------------------------------------------------------------
 
 def _init_client() -> Groq | None:
     api_key = os.getenv("GROQ_API_KEY", "").strip()
@@ -87,9 +80,6 @@ def _init_client() -> Groq | None:
 _client: Groq | None = _init_client()
 
 
-# ---------------------------------------------------------------------------
-# Internal helpers
-# ---------------------------------------------------------------------------
 
 class RateLimitError(Exception):
     """Raised when all retries are exhausted due to 429 responses."""
@@ -144,9 +134,6 @@ def _trim_chunk(text: str, max_chars: int = MAX_CHARS_PER_CHUNK) -> str:
     return trimmed + "..."
 
 
-# ---------------------------------------------------------------------------
-# Query expansion
-# ---------------------------------------------------------------------------
 
 def expand_query(question: str) -> str:
     """
@@ -180,9 +167,6 @@ def get_expanded_query(question: str) -> str:
     return expand_query(question)
 
 
-# ---------------------------------------------------------------------------
-# Public interface
-# ---------------------------------------------------------------------------
 
 @dataclass
 class RAGAnswer:
@@ -216,7 +200,6 @@ def answer_with_groq(
 
     top_score = float(hits[0][1])
 
-    # --- Confidence gate ------------------------------------------------
     if top_score < LOW_CONFIDENCE_THRESHOLD:
         logger.info("Top similarity %.4f below threshold -- skipping LLM.", top_score)
         return RAGAnswer(
@@ -229,7 +212,6 @@ def answer_with_groq(
             expanded_query=expanded,
         )
 
-    # --- Build trimmed context ------------------------------------------
     # Source citation rules:
     # 1. Only cite a page if the chunk contains an explicit inline "Page XX"
     #    citation in the text — chunks that fell back to the physical PDF page
@@ -260,7 +242,6 @@ def answer_with_groq(
     context = "\n\n".join(context_blocks)
     prompt  = f"Context:\n{context}\n\nQuestion:\n{question}"
 
-    # --- LLM not configured ---------------------------------------------
     if _client is None:
         return RAGAnswer(
             answer=(
@@ -272,7 +253,6 @@ def answer_with_groq(
             expanded_query=expanded,
         )
 
-    # --- Call Groq with retry -------------------------------------------
     try:
         logger.debug("Sending prompt to Groq (%d chars).", len(prompt))
         answer_text = _call_groq_with_retry(prompt)

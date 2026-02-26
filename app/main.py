@@ -14,18 +14,12 @@ from .engine import QAEngine
 from .llm import answer_with_groq, get_expanded_query
 from .utils import extract_and_chunk_with_pages, extract_headings
 
-# ---------------------------------------------------------------------------
-# Constants
-# ---------------------------------------------------------------------------
 
 UPLOAD_DIR = Path(__file__).parent / "uploads"
 UPLOAD_DIR.mkdir(exist_ok=True)
 
 RAG_TOP_K = 3   # number of chunks to retrieve for RAG
 
-# ---------------------------------------------------------------------------
-# App & Engine
-# ---------------------------------------------------------------------------
 
 app = FastAPI(
     title="PDF Question-Answering System",
@@ -45,10 +39,6 @@ app.add_middleware(
 
 engine = QAEngine()
 
-
-# ---------------------------------------------------------------------------
-# Schemas
-# ---------------------------------------------------------------------------
 
 class QuestionRequest(BaseModel):
     question: str
@@ -77,10 +67,6 @@ class DocumentInfo(BaseModel):
     num_chunks: int
 
 
-# ---------------------------------------------------------------------------
-# Routes -- Health
-# ---------------------------------------------------------------------------
-
 @app.get("/", tags=["Health"])
 def root():
     return {"status": "ok", "message": "PDF QA System (RAG) is running."}
@@ -90,10 +76,6 @@ def root():
 def health():
     return {"status": "ok", **engine.get_stats()}
 
-
-# ---------------------------------------------------------------------------
-# Routes -- Documents
-# ---------------------------------------------------------------------------
 
 @app.post("/upload", response_model=UploadResponse, tags=["Documents"])
 async def upload_pdf(file: UploadFile = File(...)):
@@ -172,11 +154,6 @@ def delete_document(doc_id: str):
     return {"message": f"Document {doc_id} deleted successfully."}
 
 
-
-# ---------------------------------------------------------------------------
-# Routes -- Topics
-# ---------------------------------------------------------------------------
-
 @app.get("/topics/{doc_id}", tags=["Documents"])
 def get_topics(doc_id: str):
     """
@@ -200,10 +177,6 @@ def get_topics(doc_id: str):
 
     return {"doc_id": doc_id, "topics": headings}
 
-
-# ---------------------------------------------------------------------------
-# Routes -- QA (RAG)
-# ---------------------------------------------------------------------------
 
 @app.post("/ask", response_model=RAGAnswerResponse, tags=["QA"])
 def ask_question(request: QuestionRequest):
@@ -235,7 +208,7 @@ def ask_question(request: QuestionRequest):
             detail=f"doc_id '{request.doc_id}' not found.",
         )
 
-    # Expand query for better FAISS retrieval on short questions
+    # Expand query for short questions
     expanded_query = get_expanded_query(request.question)
 
     # Retrieve using the expanded query
@@ -245,7 +218,7 @@ def ask_question(request: QuestionRequest):
         top_k=request.top_k,
     )
 
-    # Generate via Gemini (passes original question to keep the answer natural)
+    # Generate
     rag_result = answer_with_groq(question=request.question, hits=hits)
 
     return RAGAnswerResponse(

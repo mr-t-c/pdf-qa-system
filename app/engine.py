@@ -23,12 +23,10 @@ from sentence_transformers import SentenceTransformer
 
 logger = logging.getLogger(__name__)
 
-# ── Tunables ──────────────────────────────────────────────────────────────────
 MODEL_NAME = "all-MiniLM-L6-v2"   # Fast & accurate; 384-dim embeddings
 EMBEDDING_DIM = 384
 
 
-# ── Data classes ──────────────────────────────────────────────────────────────
 @dataclass
 class ChunkMeta:
     doc_id: str
@@ -55,7 +53,6 @@ class QAEngine:
         self._index = faiss.IndexFlatIP(EMBEDDING_DIM)
         logger.info("FAISS IndexFlatIP initialised (dim=%d)", EMBEDDING_DIM)
 
-    # ── Embedding helpers ─────────────────────────────────────────────────────
     def _embed(self, texts: list[str]) -> np.ndarray:
         """Return L2-normalised embeddings (shape: N × dim, dtype float32)."""
         vecs = self._model.encode(
@@ -66,7 +63,6 @@ class QAEngine:
         ).astype("float32")
         return vecs
 
-    # ── Indexing ──────────────────────────────────────────────────────────────
     def index_document(
         self,
         doc_id: str,
@@ -97,7 +93,6 @@ class QAEngine:
         )
         vecs = self._embed(chunks)
 
-        # Build metadata
         new_meta = [
             ChunkMeta(
                 doc_id=doc_id,
@@ -114,7 +109,6 @@ class QAEngine:
         self._docs[doc_id] = {"filename": filename, "num_chunks": len(chunks)}
         logger.info("Total vectors in index: %d", self._index.ntotal)
 
-    # ── Search ────────────────────────────────────────────────────────────────
     def search(
         self,
         query: str,
@@ -147,7 +141,6 @@ class QAEngine:
 
         return results
 
-    # ── QA ────────────────────────────────────────────────────────────────────
     def answer_question(
         self,
         question: str,
@@ -172,7 +165,6 @@ class QAEngine:
                 [],
             )
 
-        # Build context from retrieved chunks
         context_parts = []
         sources = []
         for rank, (meta, score) in enumerate(hits, start=1):
@@ -191,7 +183,6 @@ class QAEngine:
 
         context = "\n\n".join(context_parts)
 
-        # Simple extractive answer: most relevant chunk + citation hint
         top_text = hits[0][0].text
         answer = (
             f"{top_text}\n\n"
@@ -201,7 +192,6 @@ class QAEngine:
 
         return answer, sources
 
-    # ── Document management ───────────────────────────────────────────────────
     def delete_document(self, doc_id: str) -> None:
         """Remove all chunks for *doc_id* and rebuild the FAISS index."""
         if doc_id not in self._docs:
