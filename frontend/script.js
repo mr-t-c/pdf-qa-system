@@ -3,7 +3,7 @@
    script.js: All API calls, DOM updates, and UI state
    ============================================================ */
 
-const API_BASE = "https://your-app-name.onrender.com";
+const API = 'http://localhost:8000';
 
 /* ── DOM References ────────────────────────────────────────── */
 const dropZone       = document.getElementById('drop-zone');
