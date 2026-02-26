@@ -165,6 +165,7 @@ if "engine"            not in st.session_state: st.session_state.engine         
 if "uploaded_docs"     not in st.session_state: st.session_state.uploaded_docs     = {}
 if "prefill_question"  not in st.session_state: st.session_state.prefill_question  = ""
 if "last_result"       not in st.session_state: st.session_state.last_result       = None
+if "question"          not in st.session_state: st.session_state.question          = ""
 
 engine = st.session_state.engine
 
@@ -265,7 +266,7 @@ with st.sidebar:
                     if headings:
                         for heading in headings:
                             if st.button(heading, key=f"topic_{heading[:40]}", use_container_width=True):
-                                st.session_state.prefill_question = (
+                                st.session_state.question = (
                                     heading if heading.endswith("?") else f"{heading}?"
                                 )
                                 st.session_state.last_result = None
@@ -305,39 +306,46 @@ scope_text = (
 )
 st.markdown(f'<p class="scope-label">{scope_text}</p>', unsafe_allow_html=True)
 
+# If a topic chip set a prefill, move it into question state
+if st.session_state.prefill_question:
+    st.session_state.question = st.session_state.prefill_question
+    st.session_state.prefill_question = ""
+
+# No key= here — we control the value entirely via session state.
+# Streamlit keyed widgets ignore value= after first render, which breaks
+# topic prefill. Managing state manually avoids that conflict.
 question = st.text_area(
     "question",
-    value=st.session_state.prefill_question,
+    value=st.session_state.question,
     placeholder="e.g. What care regimen should be used with ACUVUE lenses?",
     height=100,
     label_visibility="collapsed",
 )
+# Always write back so typing is preserved across reruns
+st.session_state.question = question
 
 col_ask, _ = st.columns([1, 4])
 with col_ask:
     ask_clicked = st.button("Ask →", type="primary", use_container_width=True)
 
-if st.session_state.prefill_question:
-    st.session_state.prefill_question = ""
-
 # ─────────────────────────────────────────────────────────────
 # RAG pipeline
 # ─────────────────────────────────────────────────────────────
 if ask_clicked:
-    if not question.strip():
+    if not st.session_state.question.strip():
         st.markdown('<div class="error-banner">⚠ Please enter a question.</div>', unsafe_allow_html=True)
     elif engine.total_chunks() == 0:
         st.markdown('<div class="error-banner">⚠ No documents indexed yet. Upload a PDF first.</div>', unsafe_allow_html=True)
     else:
         with st.spinner("Searching and generating answer..."):
-            expanded_query = get_expanded_query(question)
+            expanded_query = get_expanded_query(st.session_state.question)
             hits = engine.search(
                 query=expanded_query,
                 doc_id=selected_doc_id if docs else None,
                 top_k=3,
             )
-            result = answer_with_groq(question=question, hits=hits)
-            st.session_state.last_result = (question, result)
+            result = answer_with_groq(question=st.session_state.question, hits=hits)
+            st.session_state.last_result = (st.session_state.question, result)
 
 # ─────────────────────────────────────────────────────────────
 # Answer card
